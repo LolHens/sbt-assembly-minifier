@@ -77,10 +77,7 @@ object AssemblyMinifierPlugin extends AutoPlugin {
 
       settings.map(setting => s"-$setting") ++
         (minificationFilters in minifiedAssembly).value
-          .flatMap(_.rules(
-            libraryDependencies.value ++
-              Seq("org.scala-lang" % "scala-library" % scalaVersion.value)
-          ))
+          .flatMap(_.rules(libraryDependencies.value))
           .distinct
     },
 
