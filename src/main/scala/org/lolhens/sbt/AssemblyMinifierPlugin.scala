@@ -30,7 +30,7 @@ object AssemblyMinifierPlugin extends AutoPlugin {
     minifiedAssemblyDefaultJarName in minifiedAssembly := (name.value + "-assembly-minified-" + version.value + ".jar"),
 
     minifiedAssemblyJarName in minifiedAssembly := {
-      ((minifiedAssemblyJarName in minifiedAssembly) or (assemblyDefaultJarName in assembly)).value
+      ((minifiedAssemblyJarName in minifiedAssembly) or (minifiedAssemblyDefaultJarName in minifiedAssembly)).value
     },
 
     target in minifiedAssembly := crossTarget.value,
