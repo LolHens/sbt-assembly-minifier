@@ -1,7 +1,7 @@
 package org.lolhens.sbt
 
 import com.typesafe.sbt.SbtProguard
-import sbt.Keys.{javaOptions, mainClass}
+import sbt.Keys._
 import sbt.{AutoPlugin, Plugins, TaskKey, _}
 import sbtassembly.AssemblyPlugin
 
@@ -29,13 +29,13 @@ object AssemblyMinifierPlugin extends AutoPlugin {
     ProguardKeys.inputs in Proguard := Seq((assemblyOutputPath in assembly).value),
 
     ProguardKeys.inputFilter in Proguard := (_ => None),
-    ProguardKeys.libraries in Proguard := Seq({
-      val f = file("<java.home>/lib/rt.jar")
+    ProguardKeys.libraries in Proguard := {
+      val f = javaHome.value.map(javaHome => file(javaHome.getPath + "/lib/rt.jar"))
       println(f)
-      println(f.getPath)
-      println(f.getAbsolutePath)
-      f
-    }),
+      println(f.get.getPath)
+      println(f.get.getAbsolutePath)
+      f.toList
+    },
     ProguardKeys.merge in Proguard := false,
 
     (ProguardKeys.options in Proguard) ++= {
