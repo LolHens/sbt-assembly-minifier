@@ -11,7 +11,7 @@ import sbtassembly.AssemblyPlugin
 object AssemblyMinifierPlugin extends AutoPlugin {
 
   object autoImport {
-    val minifyAssembly: TaskKey[Seq[String]] = TaskKey[Seq[String]]("minifyAssembly")
+    val minifyAssembly: TaskKey[File] = TaskKey[File]("minifyAssembly")
   }
 
   override def requires: Plugins = AssemblyPlugin
@@ -20,7 +20,7 @@ object AssemblyMinifierPlugin extends AutoPlugin {
   import SbtProguard._
   import autoImport._
 
-  override lazy val projectSettings = proguardSettings ++ Seq(
+  override lazy val projectSettings: Seq[Setting[_]] = proguardSettings ++ Seq[Setting[_]](
     ProguardKeys.proguardVersion := "5.3.3",
     (javaOptions in ProguardKeys.proguard) := Seq("-Xmx2G"),
 
@@ -95,6 +95,6 @@ object AssemblyMinifierPlugin extends AutoPlugin {
 
     ProguardKeys.proguard := ProguardKeys.proguard.dependsOn(assembly).value,
 
-    minifyAssembly.dependsOn(ProguardKeys.proguard)
+    minifyAssembly := ProguardKeys.proguard.value.head
   )
 }
