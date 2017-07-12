@@ -1,6 +1,7 @@
 package org.lolhens.sbt
 
 import com.typesafe.sbt.SbtProguard
+import org.lolhens.sbt.filters.{Akka, MySQL, Scala_2_12}
 import sbt.Keys._
 import sbt.{AutoPlugin, Plugins, TaskKey, _}
 import sbtassembly.AssemblyPlugin
@@ -18,6 +19,8 @@ object AssemblyMinifierPlugin extends AutoPlugin {
     val minifiedAssemblyDefaultJarName: TaskKey[String] = taskKey("default name of the minified fat jar")
 
     val minifiedAssemblyOutputPath: TaskKey[File] = taskKey("output path of the minified fat jar")
+
+    val minificationFilters: TaskKey[Seq[ExclusionFilter]] = taskKey("filters for the minification process")
   }
 
   override def requires: Plugins = AssemblyPlugin
@@ -27,7 +30,7 @@ object AssemblyMinifierPlugin extends AutoPlugin {
   import autoImport._
 
   override lazy val projectSettings: Seq[Setting[_]] = proguardSettings ++ Seq[Setting[_]](
-    minifiedAssemblyDefaultJarName in minifiedAssembly := (name.value + "-assembly-minified-" + version.value + ".jar"),
+    minifiedAssemblyDefaultJarName in minifiedAssembly := (name.value + "-assembly-" + version.value + "-minified.jar"),
 
     minifiedAssemblyJarName in minifiedAssembly := {
       ((minifiedAssemblyJarName in minifiedAssembly) or (minifiedAssemblyDefaultJarName in minifiedAssembly)).value
@@ -38,6 +41,13 @@ object AssemblyMinifierPlugin extends AutoPlugin {
     minifiedAssemblyOutputPath in minifiedAssembly := {
       (target in minifiedAssembly).value / (minifiedAssemblyJarName in minifiedAssembly).value
     },
+
+
+    minificationFilters in minifiedAssembly := Seq[ExclusionFilter](
+      Scala_2_12.filter,
+      Akka.filter,
+      MySQL.filter
+    ),
 
 
     ProguardKeys.proguardVersion in Proguard := "5.3.3",
@@ -65,56 +75,8 @@ object AssemblyMinifierPlugin extends AutoPlugin {
         "keepclassmembers class * {** MODULE$;}"
       )
 
-      val excluded: Seq[String] = {
-        val scala_2_12 = Seq(
-          "scala.Symbol"
-        )
-
-        val akka = Seq(
-          "* extends akka.dispatch.ExecutorServiceConfigurator",
-          "* extends akka.dispatch.MessageDispatcherConfigurator",
-          "* extends akka.remote.RemoteTransport",
-          "* implements akka.actor.Actor",
-          "* implements akka.actor.ActorRefProvider",
-          "* implements akka.actor.ExtensionId",
-          "* implements akka.actor.ExtensionIdProvider",
-          "* implements akka.actor.SupervisorStrategyConfigurator",
-          "* implements akka.dispatch.MailboxType",
-          "* implements akka.routing.RouterConfig",
-          "* implements akka.serialization.Serializer",
-          "akka.*.*MessageQueueSemantics",
-          "akka.actor.LightArrayRevolverScheduler",
-          "akka.actor.LocalActorRefProvider",
-          "akka.actor.SerializedActorRef",
-          "akka.dispatch.MultipleConsumerSemantics",
-          "akka.event.Logging$LogExt",
-          "akka.event.Logging*",
-          "akka.remote.DaemonMsgCreate",
-          "akka.routing.ConsistentHashingPool",
-          "akka.routing.RoutedActorCell$RouterActorCreator",
-          "akka.event.DefaultLoggingFilter"
-        )
-
-        val sql = Seq(
-          "* implements java.sql.Driver",
-          "com.mysql.cj.core.**",
-          "com.mysql.cj.api.**"
-        )
-
-        Seq(scala_2_12, akka, sql).flatten
-      }
-
       settings.map(setting => s"-$setting") ++
-        excluded.flatMap { clazz =>
-          List(clazz) ++
-            List(clazz)
-              .filter(_.contains(" extends "))
-              .map(_.replaceAllLiterally(" extends ", " implements "))
-        }
-          .flatMap(clazz => List(
-            s"-keep class $clazz {*;}",
-            s"-keep interface $clazz {*;}"
-          ))
+        minificationFilters.value.flatMap(_.rules(libraryDependencies.value))
     },
 
     (ProguardKeys.proguard in Proguard) := (ProguardKeys.proguard in Proguard).dependsOn(assembly).value,
