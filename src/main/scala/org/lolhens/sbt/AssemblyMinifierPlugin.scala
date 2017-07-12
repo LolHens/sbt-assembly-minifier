@@ -22,7 +22,7 @@ object AssemblyMinifierPlugin extends AutoPlugin {
 
   override lazy val projectSettings: Seq[Setting[_]] = proguardSettings ++ Seq[Setting[_]](
     ProguardKeys.proguardVersion in Proguard := "5.3.3",
-    javaOptions in (Proguard, ProguardKeys.proguard) := Seq("-Xmx2G"),
+    javaOptions in(Proguard, ProguardKeys.proguard) := Seq("-Xmx2G"),
 
     ProguardKeys.options in Proguard ++= (mainClass in Compile).value.map(mainClass => ProguardOptions.keepMain(mainClass)).toList,
 
