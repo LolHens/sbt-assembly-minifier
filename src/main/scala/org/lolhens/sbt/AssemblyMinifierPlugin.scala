@@ -29,13 +29,13 @@ object AssemblyMinifierPlugin extends AutoPlugin {
     ProguardKeys.inputs in Proguard := Seq((assemblyOutputPath in assembly).value),
 
     ProguardKeys.inputFilter in Proguard := (_ => None),
-    ProguardKeys.libraries in Proguard := {
-      val f = javaHome.value.map(javaHome => file(javaHome.getPath + "/lib/rt.jar"))
+    ProguardKeys.libraries in Proguard := Seq({
+      val f = file(System.getProperty("java.home") + "/lib/rt.jar")
       println(f)
-      println(f.get.getPath)
-      println(f.get.getAbsolutePath)
-      f.toList
-    },
+      println(f.getPath)
+      println(f.getAbsolutePath)
+      f
+    }),
     ProguardKeys.merge in Proguard := false,
 
     (ProguardKeys.options in Proguard) ++= {
