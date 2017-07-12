@@ -1,1 +1,1 @@
-# sbt-minify
+# sbt-assembly-minifier
