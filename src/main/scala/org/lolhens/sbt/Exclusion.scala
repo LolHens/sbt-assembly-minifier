@@ -9,7 +9,9 @@ abstract class Exclusion {
 
 object Exclusion {
 
-  case class Class(name: String, clazz: Boolean = true, interface: Boolean = true) extends Exclusion {
+  case class Class(name: String,
+                   clazz: Boolean = true,
+                   interface: Boolean = true) extends Exclusion {
     override lazy val rules: Seq[String] = Seq(
       Some(s"-keep class $name {*;}").filter(_ => clazz),
       Some(s"-keep interface $name {*;}").filter(_ => interface)
@@ -26,8 +28,15 @@ object Exclusion {
     }
   }
 
-  case class Package(name: String, recursive: Boolean = true) extends Exclusion {
-    override def rules: Seq[String] = Seq(s"$name.*${if (recursive) "*" else ""}")
+  case class Package(name: String,
+                     recursive: Boolean = true,
+                     clazz: Boolean = true,
+                     interface: Boolean = true) extends Exclusion {
+    override def rules: Seq[String] = Class(
+      s"$name.*${if (recursive) "*" else ""}",
+      clazz = clazz,
+      interface = interface
+    ).rules
   }
 
   case class Collect(exclusion: Seq[Exclusion]) extends Exclusion {
