@@ -76,7 +76,7 @@ object AssemblyMinifierPlugin extends AutoPlugin {
       )
 
       settings.map(setting => s"-$setting") ++
-        (minificationFilters in minifiedAssembly).value.flatMap(_.rules(libraryDependencies.value))
+        (minificationFilters in minifiedAssembly).value.flatMap(_.rules(libraryDependencies.value)).distinct
     },
 
     (ProguardKeys.proguard in Proguard) := (ProguardKeys.proguard in Proguard).dependsOn(assembly).value,
