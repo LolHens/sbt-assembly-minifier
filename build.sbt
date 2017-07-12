@@ -5,7 +5,7 @@ name := (name in ThisBuild).value
 inThisBuild(Seq(
   name := "sbt-assembly-minifier",
   organization := "org.lolhens",
-  version := "0.0.6",
+  version := "0.0.7",
 
   scalaVersion := "2.10.6",
 

@@ -11,13 +11,13 @@ import sbtassembly.AssemblyPlugin
 object AssemblyMinifierPlugin extends AutoPlugin {
 
   object autoImport {
-    val minifiedAssembly: TaskKey[File] = TaskKey[File]("Builds a deployable minified fat jar.")
+    val minifiedAssembly: TaskKey[File] = taskKey("Builds a deployable minified fat jar.")
 
-    val minifiedAssemblyJarName: TaskKey[String] = taskKey[String]("name of the minified jar")
+    val minifiedAssemblyJarName: TaskKey[String] = taskKey("name of the minified jar")
 
-    val minifiedAssemblyDefaultJarName: TaskKey[String] = taskKey[String]("default name of the minified fat jar")
+    val minifiedAssemblyDefaultJarName: TaskKey[String] = taskKey("default name of the minified fat jar")
 
-    val minifiedAssemblyOutputPath: TaskKey[File] = taskKey[File]("output path of the minified fat jar")
+    val minifiedAssemblyOutputPath: TaskKey[File] = taskKey("output path of the minified fat jar")
   }
 
   override def requires: Plugins = AssemblyPlugin
