@@ -24,9 +24,9 @@ object AssemblyMinifierPlugin extends AutoPlugin {
     ProguardKeys.proguardVersion in Proguard := "5.3.3",
     javaOptions in (Proguard, ProguardKeys.proguard) := Seq("-Xmx2G"),
 
-    ProguardKeys.options ++= (mainClass in Compile).value.map(mainClass => ProguardOptions.keepMain(mainClass)).toList,
+    ProguardKeys.options in Proguard ++= (mainClass in Compile).value.map(mainClass => ProguardOptions.keepMain(mainClass)).toList,
 
-    ProguardKeys.inputs := Seq((assemblyOutputPath in assembly).value),
+    ProguardKeys.inputs in Proguard := Seq((assemblyOutputPath in assembly).value),
 
     ProguardKeys.inputFilter in Proguard := (_ => None),
     ProguardKeys.libraries in Proguard := Seq(file("<java.home>/lib/rt.jar")),
