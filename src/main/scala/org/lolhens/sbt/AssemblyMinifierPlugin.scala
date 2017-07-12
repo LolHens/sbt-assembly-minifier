@@ -21,8 +21,8 @@ object AssemblyMinifierPlugin extends AutoPlugin {
   import autoImport._
 
   override lazy val projectSettings: Seq[Setting[_]] = proguardSettings ++ Seq[Setting[_]](
-    ProguardKeys.proguardVersion := "5.3.3",
-    (javaOptions in ProguardKeys.proguard) := Seq("-Xmx2G"),
+    ProguardKeys.proguardVersion in Proguard := "5.3.3",
+    javaOptions in (Proguard, ProguardKeys.proguard) := Seq("-Xmx2G"),
 
     ProguardKeys.options ++= (mainClass in Compile).value.map(mainClass => ProguardOptions.keepMain(mainClass)).toList,
 
@@ -93,8 +93,8 @@ object AssemblyMinifierPlugin extends AutoPlugin {
           ))
     },
 
-    ProguardKeys.proguard := ProguardKeys.proguard.dependsOn(assembly).value,
+    (ProguardKeys.proguard in Proguard) := (ProguardKeys.proguard in Proguard).dependsOn(assembly).value,
 
-    minifyAssembly := ProguardKeys.proguard.value.head
+    minifyAssembly := (ProguardKeys.proguard in Proguard).value.head
   )
 }
