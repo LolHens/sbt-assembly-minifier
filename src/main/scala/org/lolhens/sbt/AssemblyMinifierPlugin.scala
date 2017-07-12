@@ -11,7 +11,13 @@ import sbtassembly.AssemblyPlugin
 object AssemblyMinifierPlugin extends AutoPlugin {
 
   object autoImport {
-    val minifyAssembly: TaskKey[File] = TaskKey[File]("minifyAssembly")
+    val minifiedAssembly: TaskKey[File] = TaskKey[File]("Builds a deployable minified fat jar.")
+
+    val minifiedAssemblyJarName: TaskKey[String] = taskKey[String]("name of the minified jar")
+
+    val minifiedAssemblyDefaultJarName: TaskKey[String] = taskKey[String]("default name of the minified fat jar")
+
+    val minifiedAssemblyOutputPath: TaskKey[File] = taskKey[File]("output path of the minified fat jar")
   }
 
   override def requires: Plugins = AssemblyPlugin
@@ -21,21 +27,33 @@ object AssemblyMinifierPlugin extends AutoPlugin {
   import autoImport._
 
   override lazy val projectSettings: Seq[Setting[_]] = proguardSettings ++ Seq[Setting[_]](
+    minifiedAssemblyDefaultJarName in minifiedAssembly := (name.value + "-assembly-minified-" + version.value + ".jar"),
+
+    minifiedAssemblyJarName in minifiedAssembly := {
+      ((minifiedAssemblyJarName in minifiedAssembly) or (assemblyDefaultJarName in assembly)).value
+    },
+
+    target in minifiedAssembly := crossTarget.value,
+
+    minifiedAssemblyOutputPath in minifiedAssembly := {
+      (target in minifiedAssembly).value / (minifiedAssemblyJarName in minifiedAssembly).value
+    },
+
+
     ProguardKeys.proguardVersion in Proguard := "5.3.3",
+
     javaOptions in(Proguard, ProguardKeys.proguard) := Seq("-Xmx2G"),
 
     ProguardKeys.options in Proguard ++= (mainClass in Compile).value.map(mainClass => ProguardOptions.keepMain(mainClass)).toList,
 
     ProguardKeys.inputs in Proguard := Seq((assemblyOutputPath in assembly).value),
 
+    ProguardKeys.outputs in Proguard := Seq((minifiedAssemblyOutputPath in minifiedAssembly).value),
+
     ProguardKeys.inputFilter in Proguard := (_ => None),
-    ProguardKeys.libraries in Proguard := Seq({
-      val f = file(System.getProperty("java.home") + "/lib/rt.jar")
-      println(f)
-      println(f.getPath)
-      println(f.getAbsolutePath)
-      f
-    }),
+
+    ProguardKeys.libraries in Proguard := Seq(file(System.getProperty("java.home") + "/lib/rt.jar")),
+
     ProguardKeys.merge in Proguard := false,
 
     (ProguardKeys.options in Proguard) ++= {
@@ -101,6 +119,6 @@ object AssemblyMinifierPlugin extends AutoPlugin {
 
     (ProguardKeys.proguard in Proguard) := (ProguardKeys.proguard in Proguard).dependsOn(assembly).value,
 
-    minifyAssembly := (ProguardKeys.proguard in Proguard).value.head
+    minifiedAssembly := (ProguardKeys.proguard in Proguard).value.head
   )
 }
