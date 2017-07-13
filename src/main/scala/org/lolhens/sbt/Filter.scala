@@ -12,7 +12,7 @@ class Filter(val exclusions: Rule*) {
 object Filter {
   def apply(exclusions: Rule*): Filter = new Filter(exclusions: _*)
 
-  case class Module(moduleFilter: (String, String, String) => Boolean)
+  case class Module(moduleFilter: ((String, String, String)) => Boolean)
                    (exclusions: Rule*) extends Filter(exclusions: _*) {
     override def config(modules: Seq[ModuleID]): Seq[String] =
       if (modules.exists { module =>
