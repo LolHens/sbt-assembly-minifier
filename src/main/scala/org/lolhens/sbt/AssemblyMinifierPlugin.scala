@@ -30,7 +30,7 @@ object AssemblyMinifierPlugin extends AutoPlugin {
   import autoImport._
 
   override lazy val projectSettings: Seq[Setting[_]] = proguardSettings ++ Seq[Setting[_]](
-    minifiedAssemblyDefaultJarName in minifiedAssembly := (name.value + "-assembly-" + version.value + "-minified.jar"),
+    minifiedAssemblyDefaultJarName in minifiedAssembly := (name.value + "-assembly-" + version.value + "-min.jar"),
 
     minifiedAssemblyJarName in minifiedAssembly := {
       ((minifiedAssemblyJarName in minifiedAssembly) or (minifiedAssemblyDefaultJarName in minifiedAssembly)).value
@@ -84,6 +84,10 @@ object AssemblyMinifierPlugin extends AutoPlugin {
     },
 
     (ProguardKeys.proguard in Proguard) := (ProguardKeys.proguard in Proguard).dependsOn(assembly).value,
+
+    assemblyOutputPath in assembly := {
+      (target in assembly).value / "proguard" / (assemblyJarName in assembly).value
+    },
 
     minifiedAssembly := (ProguardKeys.proguard in Proguard).value.head
   )
