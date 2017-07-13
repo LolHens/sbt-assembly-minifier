@@ -20,7 +20,7 @@ object AssemblyMinifierPlugin extends AutoPlugin {
 
     val minifiedAssemblyOutputPath: TaskKey[File] = taskKey("output path of the minified fat jar")
 
-    val minificationFilters: TaskKey[Seq[ExclusionFilter]] = taskKey("filters for the minification process")
+    val minifyFilters: TaskKey[Seq[Filter]] = taskKey("filters for the minification process")
   }
 
   override def requires: Plugins = AssemblyPlugin
@@ -43,7 +43,7 @@ object AssemblyMinifierPlugin extends AutoPlugin {
     },
 
 
-    minificationFilters in minifiedAssembly := Seq[ExclusionFilter](
+    minifyFilters in minifiedAssembly := Seq[Filter](
       Scala_2_12.filter,
       Akka.filter,
       MySQL.filter
@@ -68,7 +68,9 @@ object AssemblyMinifierPlugin extends AutoPlugin {
 
     (ProguardKeys.options in Proguard) ++= {
       val settings = Seq(
-        "dontnote", "dontwarn", "ignorewarnings",
+        "dontnote",
+        "dontwarn",
+        "ignorewarnings",
         "dontobfuscate",
         "dontoptimize",
         "keepattributes Signature, *Annotation*",
@@ -76,8 +78,8 @@ object AssemblyMinifierPlugin extends AutoPlugin {
       )
 
       settings.map(setting => s"-$setting") ++
-        (minificationFilters in minifiedAssembly).value
-          .flatMap(_.rules(libraryDependencies.value))
+        (minifyFilters in minifiedAssembly).value
+          .flatMap(_.config(libraryDependencies.value))
           .distinct
     },
 

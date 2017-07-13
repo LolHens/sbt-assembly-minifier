@@ -1,13 +1,13 @@
 package org.lolhens.sbt.filters
 
-import org.lolhens.sbt.Exclusion._
-import org.lolhens.sbt.ExclusionFilter
+import org.lolhens.sbt.Filter
+import org.lolhens.sbt.Rule._
 
 /**
   * Created by pierr on 12.07.2017.
   */
 object Akka {
-  val filter = ExclusionFilter.Automatic("com.typesafe.akka", "akka-actor")(
+  val filter: Filter = Filter.Module("com.typesafe.akka", "akka-actor")(
     Subclasses(Class("akka.dispatch.ExecutorServiceConfigurator")),
     Subclasses(Class("akka.dispatch.MessageDispatcherConfigurator")),
     Subclasses(Class("akka.remote.RemoteTransport")),
