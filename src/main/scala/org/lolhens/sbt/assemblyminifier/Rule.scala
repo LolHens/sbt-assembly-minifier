@@ -20,8 +20,7 @@ object Rule {
 
   case class Subclasses(clazz: Class) extends Rule {
     override lazy val config: Seq[Config] = {
-      if (clazz.clazz) Class(s"* extends ${clazz.name}").config
-      else Nil
+      Class(s"* extends ${clazz.name}", clazz = clazz.clazz, interface = clazz.interface).config
     } ++ {
       if (clazz.interface) Class(s"* implements ${clazz.name}", interface = false).config
       else Nil
