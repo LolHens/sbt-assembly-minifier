@@ -1,9 +1,9 @@
-package org.lolhens.sbt
+package org.lolhens.sbt.assemblyminifier
 
 import com.typesafe.sbt.SbtProguard
-import org.lolhens.sbt.filters.{Akka, MySQL, Scala_2_12}
+import org.lolhens.sbt.assemblyminifier.filters._
 import sbt.Keys._
-import sbt.{AutoPlugin, Plugins, TaskKey, _}
+import sbt._
 import sbtassembly.AssemblyPlugin
 
 /**
@@ -44,6 +44,8 @@ object AssemblyMinifierPlugin extends AutoPlugin {
 
 
     minifyFilters in minifiedAssembly := Seq[Filter](
+      DefaultSettings.filter,
+      Scala.filter,
       Scala_2_12.filter,
       Akka.filter,
       MySQL.filter
@@ -66,22 +68,8 @@ object AssemblyMinifierPlugin extends AutoPlugin {
 
     ProguardKeys.merge in Proguard := false,
 
-    (ProguardKeys.options in Proguard) ++= {
-      val settings = Seq(
-        "dontnote",
-        "dontwarn",
-        "ignorewarnings",
-        "dontobfuscate",
-        "dontoptimize",
-        "keepattributes Signature, *Annotation*",
-        "keepclassmembers class * {** MODULE$;}"
-      )
-
-      settings.map(setting => s"-$setting") ++
-        (minifyFilters in minifiedAssembly).value
-          .flatMap(_.config(libraryDependencies.value))
-          .distinct
-    },
+    (ProguardKeys.options in Proguard) ++= (minifyFilters in minifiedAssembly).value
+      .flatMap(_.config(libraryDependencies.value).map(_.toString)),
 
     (ProguardKeys.proguard in Proguard) := (ProguardKeys.proguard in Proguard).dependsOn(assembly).value,
 

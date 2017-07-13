@@ -1,7 +1,7 @@
-package org.lolhens.sbt.filters
+package org.lolhens.sbt.assemblyminifier.filters
 
-import org.lolhens.sbt.Filter
-import org.lolhens.sbt.Rule._
+import org.lolhens.sbt.assemblyminifier.Filter
+import org.lolhens.sbt.assemblyminifier.Rule.{Class, Subclasses}
 
 /**
   * Created by pierr on 12.07.2017.

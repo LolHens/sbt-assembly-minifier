@@ -1,10 +1,10 @@
-package org.lolhens.sbt
+package org.lolhens.sbt.assemblyminifier
 
 /**
   * Created by pierr on 12.07.2017.
   */
 abstract class Rule {
-  def config: Seq[String]
+  def config: Seq[Config]
 }
 
 object Rule {
@@ -12,14 +12,14 @@ object Rule {
   case class Class(name: String,
                    clazz: Boolean = true,
                    interface: Boolean = true) extends Rule {
-    override lazy val config: Seq[String] = Seq(
-      Some(s"-keep class $name {*;}").filter(_ => clazz),
-      Some(s"-keep interface $name {*;}").filter(_ => interface)
+    override lazy val config: Seq[Config] = Seq(
+      Some(Config("keep", "class", name, "{*;}")).filter(_ => clazz),
+      Some(Config("keep", "interface", name, "{*;}")).filter(_ => interface)
     ).flatten
   }
 
   case class Subclasses(clazz: Class) extends Rule {
-    override lazy val config: Seq[String] = {
+    override lazy val config: Seq[Config] = {
       if (clazz.clazz) Class(s"* extends ${clazz.name}").config
       else Nil
     } ++ {
@@ -32,7 +32,7 @@ object Rule {
                      recursive: Boolean = true,
                      clazz: Boolean = true,
                      interface: Boolean = true) extends Rule {
-    override def config: Seq[String] = Class(
+    override def config: Seq[Config] = Class(
       s"$name.*${if (recursive) "*" else ""}",
       clazz = clazz,
       interface = interface
@@ -40,7 +40,7 @@ object Rule {
   }
 
   case class Collect(exclusion: Seq[Rule]) extends Rule {
-    override def config: Seq[String] = exclusion.flatMap(_.config)
+    override def config: Seq[Config] = exclusion.flatMap(_.config).distinct
   }
 
 }
