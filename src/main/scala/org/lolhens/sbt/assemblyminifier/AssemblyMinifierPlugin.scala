@@ -4,6 +4,7 @@ import com.typesafe.sbt.SbtProguard
 import org.lolhens.sbt.assemblyminifier.filters._
 import sbt.Keys._
 import sbt._
+import sbt.sbtslash.SlashSyntaxPlugin.autoImport._
 import sbtassembly.AssemblyPlugin
 
 /**
@@ -30,20 +31,19 @@ object AssemblyMinifierPlugin extends AutoPlugin {
   import autoImport._
 
   override lazy val projectSettings: Seq[Setting[_]] = proguardSettings ++ Seq[Setting[_]](
-    minifiedAssemblyDefaultJarName in minifiedAssembly := (name.value + "-assembly-" + version.value + "-min.jar"),
+    minifiedAssembly / minifiedAssemblyDefaultJarName := (name.value + "-assembly-" + version.value + "-min.jar"),
 
-    minifiedAssemblyJarName in minifiedAssembly := {
-      ((minifiedAssemblyJarName in minifiedAssembly) or (minifiedAssemblyDefaultJarName in minifiedAssembly)).value
+    minifiedAssembly / minifiedAssemblyJarName := {
+      ((minifiedAssembly / minifiedAssemblyJarName) or (minifiedAssembly / minifiedAssemblyDefaultJarName)).value
     },
 
-    target in minifiedAssembly := crossTarget.value,
+    minifiedAssembly / target := crossTarget.value,
 
-    minifiedAssemblyOutputPath in minifiedAssembly := {
-      (target in minifiedAssembly).value / (minifiedAssemblyJarName in minifiedAssembly).value
+    minifiedAssembly / minifiedAssemblyOutputPath := {
+      (minifiedAssembly / target).value / (minifiedAssembly / minifiedAssemblyJarName).value
     },
 
-
-    minifyFilters in minifiedAssembly := Seq[Filter](
+    minifiedAssembly / minifyFilters := Seq[Filter](
       DefaultSettings.filter,
       Scala.filter,
       Scala_2_12.filter,
@@ -51,32 +51,25 @@ object AssemblyMinifierPlugin extends AutoPlugin {
       MySQL.filter
     ),
 
+    Proguard / ProguardKeys.proguardVersion := "5.3.3",
+    Proguard / ProguardKeys.proguard / javaOptions := Seq("-Xmx2G"),
+    Proguard / ProguardKeys.options ++= (Compile / mainClass).value.map(mainClass => ProguardOptions.keepMain(mainClass)).toList,
+    Proguard / ProguardKeys.inputs := Seq((assembly / assemblyOutputPath).value),
+    Proguard / ProguardKeys.outputs := Seq((minifiedAssembly / minifiedAssemblyOutputPath).value),
+    Proguard / ProguardKeys.inputFilter := (_ => None),
+    Proguard / ProguardKeys.libraries := Seq(file(System.getProperty("java.home") + "/lib/rt.jar")),
+    Proguard / ProguardKeys.merge := false,
 
-    ProguardKeys.proguardVersion in Proguard := "5.3.3",
+    Proguard / ProguardKeys.options ++=
+      (minifiedAssembly / minifyFilters).value
+        .flatMap(_.config(libraryDependencies.value).map(_.toString)),
 
-    javaOptions in(Proguard, ProguardKeys.proguard) := Seq("-Xmx2G"),
+    Proguard / ProguardKeys.proguard := (Proguard / ProguardKeys.proguard).dependsOn(assembly).value,
 
-    ProguardKeys.options in Proguard ++= (mainClass in Compile).value.map(mainClass => ProguardOptions.keepMain(mainClass)).toList,
-
-    ProguardKeys.inputs in Proguard := Seq((assemblyOutputPath in assembly).value),
-
-    ProguardKeys.outputs in Proguard := Seq((minifiedAssemblyOutputPath in minifiedAssembly).value),
-
-    ProguardKeys.inputFilter in Proguard := (_ => None),
-
-    ProguardKeys.libraries in Proguard := Seq(file(System.getProperty("java.home") + "/lib/rt.jar")),
-
-    ProguardKeys.merge in Proguard := false,
-
-    (ProguardKeys.options in Proguard) ++= (minifyFilters in minifiedAssembly).value
-      .flatMap(_.config(libraryDependencies.value).map(_.toString)),
-
-    (ProguardKeys.proguard in Proguard) := (ProguardKeys.proguard in Proguard).dependsOn(assembly).value,
-
-    assemblyOutputPath in assembly := {
-      (target in assembly).value / "proguard" / (assemblyJarName in assembly).value
+    assembly / assemblyOutputPath := {
+      (assembly / target).value / "proguard" / (assembly / assemblyJarName).value
     },
 
-    minifiedAssembly := (ProguardKeys.proguard in Proguard).value.head
+    minifiedAssembly := (Proguard / ProguardKeys.proguard).value.head
   )
 }

@@ -1,6 +1,6 @@
 sbtPlugin := true
 
-name := (name in ThisBuild).value
+name := (ThisBuild / name).value
 
 inThisBuild(Seq(
   name := "sbt-assembly-minifier",
@@ -19,5 +19,8 @@ inThisBuild(Seq(
   publishTo := Some(Resolver.file("file", new File("target/releases")))
 ))
 
+addSbtPlugin("com.eed3si9n" % "sbt-slash" % "0.1.0")
+
 addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.5")
+
 addSbtPlugin("com.typesafe.sbt" % "sbt-proguard" % "0.2.3")
