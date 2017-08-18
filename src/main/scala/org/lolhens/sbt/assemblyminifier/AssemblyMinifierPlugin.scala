@@ -12,17 +12,7 @@ import sbtassembly.AssemblyPlugin
   */
 object AssemblyMinifierPlugin extends AutoPlugin {
 
-  object autoImport {
-    val minifiedAssembly: TaskKey[File] = taskKey("Builds a deployable minified fat jar.")
-
-    val minifiedAssemblyJarName: TaskKey[String] = taskKey("name of the minified jar")
-
-    val minifiedAssemblyDefaultJarName: TaskKey[String] = taskKey("default name of the minified fat jar")
-
-    val minifiedAssemblyOutputPath: TaskKey[File] = taskKey("output path of the minified fat jar")
-
-    val minifyFilters: TaskKey[Seq[Filter]] = taskKey("filters for the minification process")
-  }
+  object autoImport extends AssemblyMinifierKeys
 
   override def requires: Plugins = AssemblyPlugin
 
@@ -30,17 +20,22 @@ object AssemblyMinifierPlugin extends AutoPlugin {
   import SbtProguard._
   import autoImport._
 
-  override lazy val projectSettings: Seq[Setting[_]] = proguardSettings ++ Seq[Setting[_]](
-    minifiedAssembly / minifiedAssemblyDefaultJarName := (name.value + "-assembly-" + version.value + "-min.jar"),
+  lazy val Minify: Configuration = config("minify").hide
 
-    minifiedAssembly / minifiedAssemblyJarName := {
-      ((minifiedAssembly / minifiedAssemblyJarName) or (minifiedAssembly / minifiedAssemblyDefaultJarName)).value
-    },
+  override lazy val projectSettings: Seq[Setting[_]] = minifySettings
 
-    minifiedAssembly / target := crossTarget.value,
+  lazy val minifySettings: Seq[Setting[_]] =
+    inConfig(Minify)(
+      baseAssemblySettings ++
+        ProguardSettings.default
+    ) ++
+      baseMinifySettings
 
-    minifiedAssembly / minifiedAssemblyOutputPath := {
-      (minifiedAssembly / target).value / (minifiedAssembly / minifiedAssemblyJarName).value
+  lazy val baseMinifySettings: Seq[Setting[_]] = proguardSettings ++ Seq[Setting[_]](
+    minifiedAssembly / minifiedAssemblyOutputPath := (assembly / assemblyOutputPath).value,
+
+    Minify / assembly / assemblyOutputPath := {
+      (Minify / assembly / target).value / "proguard" / (Minify / assembly / assemblyJarName).value
     },
 
     minifiedAssembly / minifyFilters := Seq[Filter](
@@ -51,25 +46,23 @@ object AssemblyMinifierPlugin extends AutoPlugin {
       MySQL.filter
     ),
 
-    Proguard / ProguardKeys.proguardVersion := "5.3.3",
-    Proguard / ProguardKeys.proguard / javaOptions := Seq("-Xmx2G"),
-    Proguard / ProguardKeys.options ++= (Compile / mainClass).value.map(mainClass => ProguardOptions.keepMain(mainClass)).toList,
-    Proguard / ProguardKeys.inputs := Seq((assembly / assemblyOutputPath).value),
-    Proguard / ProguardKeys.outputs := Seq((minifiedAssembly / minifiedAssemblyOutputPath).value),
-    Proguard / ProguardKeys.inputFilter := (_ => None),
-    Proguard / ProguardKeys.libraries := Seq(file(System.getProperty("java.home") + "/lib/rt.jar")),
-    Proguard / ProguardKeys.merge := false,
+    Minify / ProguardKeys.proguardVersion := "5.3.3",
+    Minify / ProguardKeys.proguard / javaOptions := Seq("-Xmx2G"),
+    Minify / ProguardKeys.options ++=
+      (Compile / mainClass).value.map(mainClass => ProguardOptions.keepMain(mainClass)).toList,
+    Minify / ProguardKeys.inputs := Seq((Minify / assembly).value),
+    Minify / ProguardKeys.outputs := Seq((minifiedAssembly / minifiedAssemblyOutputPath).value),
+    Minify / ProguardKeys.inputFilter := (_ => None),
+    Minify / ProguardKeys.libraries := Seq(file(System.getProperty("java.home") + "/lib/rt.jar")),
+    Minify / ProguardKeys.merge := false,
 
-    Proguard / ProguardKeys.options ++=
+    Minify / ProguardKeys.options ++=
       (minifiedAssembly / minifyFilters).value
         .flatMap(_.config(libraryDependencies.value).map(_.toString)),
 
-    Proguard / ProguardKeys.proguard := (Proguard / ProguardKeys.proguard).dependsOn(assembly).value,
+    Minify / ProguardKeys.proguard :=
+      (Minify / ProguardKeys.proguard).value,
 
-    assembly / assemblyOutputPath := {
-      (assembly / target).value / "proguard" / (assembly / assemblyJarName).value
-    },
-
-    minifiedAssembly := (Proguard / ProguardKeys.proguard).value.head
+    minifiedAssembly := (Minify / ProguardKeys.proguard).value.head
   )
 }

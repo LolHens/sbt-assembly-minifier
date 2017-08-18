@@ -5,11 +5,12 @@ name := (ThisBuild / name).value
 inThisBuild(Seq(
   name := "sbt-assembly-minifier",
   organization := "org.lolhens",
-  version := "0.4.1",
+  version := "0.5.0",
 
   scalaVersion := "2.10.6",
 
   externalResolvers := Seq(
+    Resolver.defaultLocal,
     "artifactory-maven" at "http://lolhens.no-ip.org/artifactory/maven-public/",
     Resolver.url("artifactory-ivy", url("http://lolhens.no-ip.org/artifactory/ivy-public/"))(Resolver.ivyStylePatterns)
   ),
