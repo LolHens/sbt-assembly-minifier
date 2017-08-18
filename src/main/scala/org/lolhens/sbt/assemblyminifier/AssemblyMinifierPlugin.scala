@@ -1,6 +1,7 @@
 package org.lolhens.sbt.assemblyminifier
 
 import com.typesafe.sbt.SbtProguard
+import com.typesafe.sbt.SbtProguard.ProguardKeys.proguardVersion
 import org.lolhens.sbt.assemblyminifier.filters._
 import sbt.Keys._
 import sbt._
@@ -12,7 +13,9 @@ import sbtassembly.AssemblyPlugin
   */
 object AssemblyMinifierPlugin extends AutoPlugin {
 
-  object autoImport extends AssemblyMinifierKeys
+  object autoImport extends AssemblyMinifierKeys {
+    val baseMinifySettings: Seq[Setting[_]] = AssemblyMinifierPlugin.baseMinifySettings
+  }
 
   override def requires: Plugins = AssemblyPlugin
 
@@ -20,49 +23,52 @@ object AssemblyMinifierPlugin extends AutoPlugin {
   import SbtProguard._
   import autoImport._
 
-  lazy val Minify: Configuration = config("minify").hide
-
   override lazy val projectSettings: Seq[Setting[_]] = minifySettings
 
-  lazy val minifySettings: Seq[Setting[_]] =
-    inConfig(Minify)(
-      baseAssemblySettings ++
-        ProguardSettings.default
-    ) ++
-      baseMinifySettings
+  lazy val Minify: Configuration = config("minify").hide
 
-  lazy val baseMinifySettings: Seq[Setting[_]] = proguardSettings ++ Seq[Setting[_]](
-    minifiedAssembly / minifiedAssemblyOutputPath := (assembly / assemblyOutputPath).value,
+  lazy val minifySettings: Seq[Setting[_]] = baseMinifySettings
 
-    Minify / assembly / assemblyOutputPath := {
-      (Minify / assembly / target).value / "proguard" / (Minify / assembly / assemblyJarName).value
-    },
+  lazy val baseMinifySettings: Seq[Setting[_]] = Seq(
+    inConfig(Minify)(ProguardSettings.default),
 
-    minifiedAssembly / minifyFilters := Seq[Filter](
-      DefaultSettings.filter,
-      Scala.filter,
-      Scala_2_12.filter,
-      Akka.filter,
-      MySQL.filter
-    ),
+    inConfig(Minify)(Seq(
+      assembly := Assembly.assemblyTask(assembly).value,
 
-    Minify / ProguardKeys.proguardVersion := "5.3.3",
-    Minify / ProguardKeys.proguard / javaOptions := Seq("-Xmx2G"),
-    Minify / ProguardKeys.options ++=
-      (Compile / mainClass).value.map(mainClass => ProguardOptions.keepMain(mainClass)).toList,
-    Minify / ProguardKeys.inputs := Seq((Minify / assembly).value),
-    Minify / ProguardKeys.outputs := Seq((minifiedAssembly / minifiedAssemblyOutputPath).value),
-    Minify / ProguardKeys.inputFilter := (_ => None),
-    Minify / ProguardKeys.libraries := Seq(file(System.getProperty("java.home") + "/lib/rt.jar")),
-    Minify / ProguardKeys.merge := false,
+      assembly / assemblyOutputPath := {
+        (assembly / target).value / "proguard" / (assembly / assemblyJarName).value
+      }
+    )),
 
-    Minify / ProguardKeys.options ++=
-      (minifiedAssembly / minifyFilters).value
-        .flatMap(_.config(libraryDependencies.value).map(_.toString)),
+    Seq[Setting[_]](
+      minifiedAssembly / minifiedAssemblyOutputPath := (assembly / assemblyOutputPath).value,
 
-    Minify / ProguardKeys.proguard :=
-      (Minify / ProguardKeys.proguard).value,
+      minifiedAssembly / minifyFilters := Seq[Filter](
+        DefaultSettings.filter,
+        Scala.filter,
+        Scala_2_12.filter,
+        Akka.filter,
+        MySQL.filter
+      ),
 
-    minifiedAssembly := (Minify / ProguardKeys.proguard).value.head
-  )
+      Minify / ProguardKeys.proguardVersion := "5.3.3",
+      Minify / ProguardKeys.proguard / javaOptions := Seq("-Xmx2G"),
+      Minify / ProguardKeys.options ++=
+        (Compile / mainClass).value.map(mainClass => ProguardOptions.keepMain(mainClass)).toList,
+      Minify / ProguardKeys.inputs := Seq((Minify / assembly).value),
+      Minify / ProguardKeys.outputs := Seq((minifiedAssembly / minifiedAssemblyOutputPath).value),
+      Minify / ProguardKeys.inputFilter := (_ => None),
+      Minify / ProguardKeys.libraries := Seq(file(System.getProperty("java.home") + "/lib/rt.jar")),
+      Minify / ProguardKeys.merge := false,
+
+      Minify / ProguardKeys.options ++=
+        (minifiedAssembly / minifyFilters).value
+          .flatMap(_.config(libraryDependencies.value).map(_.toString)),
+
+      ivyConfigurations += Minify,
+      libraryDependencies += "net.sf.proguard" % "proguard-base" % (proguardVersion in Minify).value % Minify,
+
+      minifiedAssembly := (Minify / ProguardKeys.proguard).value.head
+    )
+  ).flatten
 }
