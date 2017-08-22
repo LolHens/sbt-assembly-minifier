@@ -1,6 +1,6 @@
 package org.lolhens.sbt.assemblyminifier
 
-import sbt.ModuleID
+import org.lolhens.sbt.assemblyminifier.Sbt10Compat.ModuleID
 
 /**
   * Created by pierr on 12.07.2017.
@@ -16,8 +16,7 @@ object Filter {
                    (exclusions: Rule*) extends Filter(exclusions: _*) {
     override def config(modules: Seq[ModuleID]): Seq[Config] =
       if (modules.exists { module =>
-        val ModuleID(organization, name, version, _, _, _, _, _, _, _, _) = module
-        moduleFilter((organization, name, version))
+        moduleFilter((module.organization, module.name, module.revision))
       }) super.config(modules)
       else Nil
   }

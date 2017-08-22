@@ -1,13 +1,11 @@
 sbtPlugin := true
 
-name := (ThisBuild / name).value
+name := (name in ThisBuild).value
 
 inThisBuild(Seq(
   name := "sbt-assembly-minifier",
   organization := "org.lolhens",
-  version := "0.5.1",
-
-  scalaVersion := "2.10.6",
+  version := "0.5.2",
 
   externalResolvers := Seq(
     Resolver.defaultLocal,
@@ -15,13 +13,20 @@ inThisBuild(Seq(
     Resolver.url("artifactory-ivy", url("http://lolhens.no-ip.org/artifactory/ivy-public/"))(Resolver.ivyStylePatterns)
   ),
 
-  scalacOptions ++= Seq("-Xmax-classfile-name", "254"),
-
-  publishTo := Some(Resolver.file("file", new File("target/releases")))
+  scalacOptions ++= Seq("-Xmax-classfile-name", "127")
 ))
 
-addSbtPlugin("com.eed3si9n" % "sbt-slash" % "0.1.0")
+//addSbtPlugin("com.eed3si9n" % "sbt-slash" % "0.1.0")
 
-addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.5")
+addCrossSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.5")
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-proguard" % "0.2.3")
+addCrossSbtPlugin("com.typesafe.sbt" % "sbt-proguard" % "0.2.5")
+
+def addCrossSbtPlugin(dependency: ModuleID): Setting[Seq[ModuleID]] =
+  libraryDependencies += {
+    val sbtV = (sbtBinaryVersion in pluginCrossBuild).value
+    val scalaV = (scalaBinaryVersion in update).value
+    Defaults.sbtPluginExtra(dependency, sbtV, scalaV)
+  }
+
+crossSbtVersions := Seq("0.13.16", "1.0.0")
