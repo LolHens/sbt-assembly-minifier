@@ -5,7 +5,7 @@ name := (name in ThisBuild).value
 inThisBuild(Seq(
   name := "sbt-assembly-minifier",
   organization := "org.lolhens",
-  version := "0.5.3",
+  version := "0.5.4",
 
   externalResolvers := Seq(
     Resolver.defaultLocal,
