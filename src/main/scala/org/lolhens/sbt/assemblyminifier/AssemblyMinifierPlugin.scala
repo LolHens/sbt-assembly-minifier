@@ -1,7 +1,6 @@
 package org.lolhens.sbt.assemblyminifier
 
 import com.typesafe.sbt.SbtProguard
-import com.typesafe.sbt.SbtProguard.ProguardSettings
 import org.lolhens.sbt.assemblyminifier.filters._
 import sbt.Keys._
 import sbt._
@@ -31,7 +30,7 @@ object AssemblyMinifierPlugin extends AutoPlugin {
   lazy val minifySettings: Seq[Setting[_]] = baseMinifySettings
 
   lazy val baseMinifySettings: Seq[Setting[_]] = Seq(
-    inConfig(Minify)(ProguardSettings.default),
+    inConfig(Minify)(SbtProguard.baseSettings),
 
     inConfig(Minify)(Seq(
       assembly := Assembly.assemblyTask(assembly).value,
