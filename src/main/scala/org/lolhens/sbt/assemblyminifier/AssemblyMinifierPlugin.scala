@@ -22,9 +22,11 @@ object AssemblyMinifierPlugin extends AutoPlugin {
   import SbtProguard.autoImport._
   import autoImport._
 
-  override lazy val projectSettings: Seq[Setting[_]] = minifySettings
-
   lazy val Minify: Configuration = config("minify").hide
+
+  override def projectConfigurations: Seq[Configuration] = Seq(Minify)
+
+  override lazy val projectSettings: Seq[Setting[_]] = minifySettings
 
   lazy val minifySettings: Seq[Setting[_]] = baseMinifySettings
 
