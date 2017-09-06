@@ -1,6 +1,6 @@
 package org.lolhens.sbt.assemblyminifier
 
-import com.typesafe.sbt.SbtProguard
+import com.lightbend.sbt.SbtProguard
 import org.lolhens.sbt.assemblyminifier.filters._
 import sbt.Keys._
 import sbt._
@@ -51,16 +51,16 @@ object AssemblyMinifierPlugin extends AutoPlugin {
       ),
 
       proguardVersion in Minify := "5.3.3",
-      javaOptions in (Minify, proguard) := Seq("-Xmx2G"),
-      options in Minify ++=
+      javaOptions in(Minify, proguard) := Seq("-Xmx2G"),
+      proguardOptions in Minify ++=
         (mainClass in Compile).value.map(mainClass => ProguardOptions.keepMain(mainClass)).toList,
-      inputs in Minify := Seq((assembly in Minify).value),
-      outputs in Minify := Seq((minifiedAssemblyOutputPath in minifiedAssembly).value),
-      inputFilter in Minify := (_ => None),
-      libraries in Minify := Seq(file(System.getProperty("java.home") + "/lib/rt.jar")),
-      merge in Minify := false,
+      proguardInputs in Minify := Seq((assembly in Minify).value),
+      proguardOutputs in Minify := Seq((minifiedAssemblyOutputPath in minifiedAssembly).value),
+      proguardInputFilter in Minify := (_ => None),
+      proguardLibraries in Minify := Seq(file(System.getProperty("java.home") + "/lib/rt.jar")),
+      proguardMerge in Minify := false,
 
-      options in Minify ++=
+      proguardOptions in Minify ++=
         (minifyFilters in minifiedAssembly).value
           .flatMap(_.config(libraryDependencies.value).map(_.toString)),
 

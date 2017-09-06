@@ -5,7 +5,7 @@ name := (name in ThisBuild).value
 inThisBuild(Seq(
   name := "sbt-assembly-minifier",
   organization := "org.lolhens",
-  version := "0.5.4",
+  version := "0.5.5",
 
   externalResolvers := Seq(
     Resolver.defaultLocal,
@@ -20,7 +20,7 @@ inThisBuild(Seq(
 
 addCrossSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.5")
 
-addCrossSbtPlugin("com.typesafe.sbt" % "sbt-proguard" % "0.2.5")
+addCrossSbtPlugin("com.lightbend.sbt" % "sbt-proguard" % "0.3.0")
 
 def addCrossSbtPlugin(dependency: ModuleID): Setting[Seq[ModuleID]] =
   libraryDependencies += {
@@ -29,4 +29,4 @@ def addCrossSbtPlugin(dependency: ModuleID): Setting[Seq[ModuleID]] =
     Defaults.sbtPluginExtra(dependency, sbtV, scalaV)
   }
 
-crossSbtVersions := Seq("0.13.16", "1.0.0")
+crossSbtVersions := Seq("0.13.16", "1.0.1")
