@@ -50,7 +50,7 @@ object AssemblyMinifierPlugin extends AutoPlugin {
         MySQL.filter
       ),
 
-      proguardVersion in Minify := "5.3.3",
+      proguardVersion in Minify := "6.0.2",
       javaOptions in(Minify, proguard) := Seq("-Xmx2G"),
       proguardOptions in Minify ++=
         (mainClass in Compile).value.map(mainClass => ProguardOptions.keepMain(mainClass)).toList,
